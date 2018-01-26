@@ -1,0 +1,13 @@
+schema {
+    query: Query
+}
+type Product{
+    id: ID!
+    name: String!
+    price: Float
+}
+type Query{
+    product(id: ID!): Product
+    products(first: Int, after: Int): [Product]!
+    search(q: String!, first: Int, after: Int): [Product]!
+}
