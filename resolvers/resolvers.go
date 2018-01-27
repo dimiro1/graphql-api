@@ -15,70 +15,95 @@ type Resolver struct {
 }
 
 type ProductsQueryArgs struct {
-	First *int32
-	After *int32
+	First  *int32
+	After  *graphql.ID
+	Last   *int32
+	Before *graphql.ID
 }
 
-func (r *Resolver) Products(ctx context.Context, args ProductsQueryArgs) []*productResolver {
-	var resolverList []*productResolver
-	var first int32 = 10
-	var after int32
+func (r *Resolver) Products(ctx context.Context, args ProductsQueryArgs) (ProductConnectionResolver, error) {
+	productConnectionResolver := ProductConnectionResolver{
+		pagedProducts: products.PagedProducts{},
+	}
 
+	var (
+		first  int32 = 10
+		after  int64 = 0
+		last   int32 = 10
+		before int64 = 0
+	)
+
+	if args.After != nil {
+		after, _ = strconv.ParseInt(string(*args.After), 10, 64)
+	}
 	if args.First != nil {
 		first = *args.First
 	}
-	if args.After != nil {
-		after = *args.After
+	if args.Before != nil {
+		after, _ = strconv.ParseInt(string(*args.Before), 10, 64)
+	}
+	if args.Last != nil {
+		last = *args.Last
 	}
 
-	productList, err := r.InventoryRepository.All(pagination.Options{Limit: int(first), Offset: int(after)})
+	var err error
+	productConnectionResolver.pagedProducts, err = r.InventoryRepository.All(ctx, pagination.ForwardBackwardCursor{
+		ForwardCursor: pagination.ForwardCursor{
+			First: int(first),
+			After: after,
+		},
+		BackwardCursor: pagination.BackwardCursor{
+			Last:   int(last),
+			Before: before,
+		},
+	})
 	if err != nil {
-		return resolverList
+		return productConnectionResolver, err
 	}
 
-	for _, p := range productList {
-		resolverList = append(resolverList, &productResolver{p})
-	}
-	return resolverList
+	return productConnectionResolver, nil
 }
 
 type SearchQueryArgs struct {
 	Q     string
 	First *int32
-	After *int32
+	After *graphql.ID
 }
 
-func (r *Resolver) Search(args SearchQueryArgs) []*productResolver {
-	var resolverList []*productResolver
-	var first int32 = 10
-	var after int32
+func (r *Resolver) Search(ctx context.Context, args SearchQueryArgs) (ProductConnectionResolver, error) {
+	productConnectionResolver := ProductConnectionResolver{
+		pagedProducts: products.PagedProducts{},
+	}
 
+	var (
+		first int32 = 10
+		after int64 = 0
+	)
+
+	if args.After != nil {
+		after, _ = strconv.ParseInt(string(*args.After), 10, 64)
+	}
 	if args.First != nil {
 		first = *args.First
 	}
-	if args.After != nil {
-		after = *args.After
-	}
 
-	productList, err := r.InventoryRepository.Search(search.Options{
-		Options: pagination.Options{Limit: int(first), Offset: int(after)},
-		Q:       args.Q,
+	var err error
+	productConnectionResolver.pagedProducts, err = r.InventoryRepository.Search(ctx, search.Cursor{
+		ForwardCursor: pagination.ForwardCursor{First: int(first), After: after},
+		Q:             args.Q,
 	})
 	if err != nil {
-		return resolverList
+		return productConnectionResolver, err
 	}
 
-	for _, p := range productList {
-		resolverList = append(resolverList, &productResolver{p})
-	}
-	return resolverList
+	return productConnectionResolver, nil
 }
 
 type ProductQueryArgs struct {
 	ID graphql.ID
 }
 
-func (r *Resolver) Product(args ProductQueryArgs) *productResolver {
+func (r *Resolver) Product(ctx context.Context, args ProductQueryArgs) *ProductResolver {
 	id, err := strconv.ParseInt(string(args.ID), 10, 2)
 	if err != nil {
 		return nil
@@ -89,5 +114,5 @@ func (r *Resolver) Product(args ProductQueryArgs) *productResolver {
 		return nil
 	}
 
-	return &productResolver{product}
+	return &ProductResolver{product}
 }

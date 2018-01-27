@@ -1,13 +1,30 @@
 schema {
     query: Query
 }
-type Product{
+type Product {
     id: ID!
     name: String!
     price: Float
 }
+
+type ProductEdge {
+    cursor: String!
+    node: Product!
+}
+
+type PageInfo {
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+}
+
+type ProductConnection {
+    totalCount: Int!
+    edges: [ProductEdge]!
+    pageInfo: PageInfo!
+}
+
 type Query{
     product(id: ID!): Product
-    products(first: Int, after: Int): [Product]!
-    search(q: String!, first: Int, after: Int): [Product]!
+    products(first: Int, after: ID, last: Int, before: ID): ProductConnection!
+    search(q: String!, first: Int, after: ID): ProductConnection!
 }

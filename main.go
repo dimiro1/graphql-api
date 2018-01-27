@@ -36,7 +36,7 @@ func main() {
                 INSERT INTO Products VALUES (3, 'Refrigerator', 800);
                 INSERT INTO Products VALUES (4, 'Dishwasher', 400);`)
 
-	inventoryRepository := &products.DatabaseInventoryRepository{db}
+	inventoryRepository := &products.DatabaseInventoryRepository{DB: db}
 
 	schema := graphql.MustParseSchema(string(data), &resolvers.Resolver{
 		InventoryRepository: inventoryRepository,
