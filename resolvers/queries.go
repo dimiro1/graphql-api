@@ -10,7 +10,7 @@ import (
 	"github.com/neelance/graphql-go"
 )
 
-type Resolver struct {
+type QueriesResolver struct {
 	InventoryRepository products.InventoryRepository
 }
 
@@ -21,7 +21,7 @@ type ProductsQueryArgs struct {
 	Before *graphql.ID
 }
 
-func (r *Resolver) Products(ctx context.Context, args ProductsQueryArgs) (ProductConnectionResolver, error) {
+func (r *QueriesResolver) Products(ctx context.Context, args ProductsQueryArgs) (ProductConnectionResolver, error) {
 	productConnectionResolver := ProductConnectionResolver{
 		pagedProducts: products.PagedProducts{},
 	}
@@ -70,7 +70,7 @@ type SearchQueryArgs struct {
 	After *graphql.ID
 }
 
-func (r *Resolver) Search(ctx context.Context, args SearchQueryArgs) (ProductConnectionResolver, error) {
+func (r *QueriesResolver) Search(ctx context.Context, args SearchQueryArgs) (ProductConnectionResolver, error) {
 	productConnectionResolver := ProductConnectionResolver{
 		pagedProducts: products.PagedProducts{},
 	}
@@ -103,8 +103,8 @@ type ProductQueryArgs struct {
 	ID graphql.ID
 }
 
-func (r *Resolver) Product(ctx context.Context, args ProductQueryArgs) *ProductResolver {
-	id, err := strconv.ParseInt(string(args.ID), 10, 2)
+func (r *QueriesResolver) Product(ctx context.Context, args ProductQueryArgs) *ProductResolver {
+	id, err := strconv.ParseInt(string(args.ID), 10, 64)
 	if err != nil {
 		return nil
 	}

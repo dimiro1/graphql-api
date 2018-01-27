@@ -38,7 +38,7 @@ func main() {
 
 	inventoryRepository := &products.DatabaseInventoryRepository{DB: db}
 
-	schema := graphql.MustParseSchema(string(data), &resolvers.Resolver{
+	schema := graphql.MustParseSchema(string(data), &resolvers.QueriesResolver{
 		InventoryRepository: inventoryRepository,
 	})
 
